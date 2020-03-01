@@ -1,0 +1,20 @@
+{
+  "name": "play-x-play-controller",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/desmond-grey/play-x-play-controller.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/desmond-grey/play-x-play-controller/issues"
+  },
+  "homepage": "https://github.com/desmond-grey/play-x-play-controller#readme"
+}
