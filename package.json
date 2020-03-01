@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/desmond-grey/play-x-play-controller/issues"
   },
-  "homepage": "https://github.com/desmond-grey/play-x-play-controller#readme"
+  "homepage": "https://github.com/desmond-grey/play-x-play-controller#readme",
+  "dependencies": {
+    "onoff": "^5.0.1"
+  }
 }
