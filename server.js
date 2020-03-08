@@ -37,7 +37,7 @@ function buttonOneWatcher() {
             return;
         }
         console.log(`button press detected, setting LED to ${value}`);
-        toggleLedState(sideOneLedGreen);
+        ledUtil.toggleLedState(sideOneLedGreen);
     };
 }
 
@@ -48,7 +48,7 @@ function buttonTwoWatcher() {
             return;
         }
         console.log(`button press detected, setting LED to ${value}`);
-        toggleLedState(sideTwoLedGreen);
+        ledUtil.toggleLedState(sideTwoLedGreen);
     };
 }
 
