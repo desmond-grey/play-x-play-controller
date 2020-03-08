@@ -1,6 +1,6 @@
-const Gpio = require('onoff').Gpio;
-
-const BLINK_INTERVAL_MILLIS = 500;
+const
+    Gpio = require('onoff').Gpio,
+    ledUtil = require('./lib/ledUtil');
 
 const sideOneButton  = new Gpio(26, 'in', 'both');    // pin 37  todo: maybe don't want to use both
 const sideOneLedGreen = new Gpio(19, 'out');          // pin 35
@@ -20,12 +20,11 @@ sideTwoLedGreen.writeSync(0);
 systemLedGreen.writeSync(0);
 systemLedRed.writeSync(0);
 
-// flash all the led's at startup twice
-blinkLed(sideOneLedGreen, 2);
-blinkLed(sideTwoLedGreen, 2);
-blinkLed(systemLedGreen, 2);
-blinkLed(systemLedRed, 2);
-
+// flash all the led's twice at startup
+ledUtil.blinkLed(sideOneLedGreen, 2);
+ledUtil.blinkLed(sideTwoLedGreen, 2);
+ledUtil.blinkLed(systemLedGreen, 2);
+ledUtil.blinkLed(systemLedRed, 2);
 
 
 
@@ -51,28 +50,6 @@ function buttonTwoWatcher() {
         console.log(`button press detected, setting LED to ${value}`);
         toggleLedState(sideTwoLedGreen);
     };
-}
-
-function blinkLed(led, numBlinks) {
-    let numToggles = numBlinks * 2;     // two toggles needed for each blink
-
-    let toggleCount = 0;
-    let intervalID = setInterval(function () {
-        toggleLedState(led);
-        toggleCount ++;
-
-        if (toggleCount === numToggles) {
-            clearInterval(intervalID);
-        }
-    }, BLINK_INTERVAL_MILLIS);
-}
-
-function toggleLedState(led) {
-    if (led.readSync() === 0) {
-        led.writeSync(1);
-    } else {
-        led.writeSync(0);
-    }
 }
 
 function cleanupResources() {
