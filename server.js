@@ -11,8 +11,8 @@ const systemLedRed = new Gpio(9, 'out');              // pin 21
 
 // register event handlers
 process.on('SIGINT', cleanupResources());       // runs on exit via ctrl-c
-sideOneButton.watch(buttonOneWatcher);
-sideTwoButton.watch(buttonTwoWatcher);
+sideOneButton.watch(buttonOneWatcher());
+sideTwoButton.watch(buttonTwoWatcher());
 
 // turn all LED's off
 sideOneLedGreen.writeSync(0);
