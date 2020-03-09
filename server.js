@@ -46,6 +46,7 @@ const systemLedRed = new Gpio(9, 'out');              // pin 21
         sideOneButton.watch(buttonOneWatcher);
         sideTwoButton.watch(buttonTwoWatcher);
     } catch (e) {
+        // todo: some errors are not handled here but are special kinds of body responses.  handle those
         console.error(e);
     }
 })();
@@ -74,6 +75,7 @@ function buttonOneWatcher(err, value) {
                 ledUtil.blinkLed(sideOneLedGreen, 2);
             })
             .catch((err) => {
+                // todo: some errors are not handled here but are special kinds of body responses.  handle those
                 console.error(`Error: ${err}`);
             });
     }
