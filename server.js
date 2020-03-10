@@ -18,10 +18,10 @@ const systemLedRed = new Gpio(9, 'out');              // pin 21
 (async () => {
     try {
         // turn all LED's off
-        sideOneLedGreen.writeSync(0);
-        sideTwoLedGreen.writeSync(0);
-        systemLedGreen.writeSync(0);
-        systemLedRed.writeSync(0);
+        ledUtil.turnLedOff(sideOneLedGreen);
+        ledUtil.turnLedOff(sideTwoLedGreen);
+        ledUtil.turnLedOff(systemLedGreen);
+        ledUtil.turnLedOff(systemLedRed);
 
         // flash all the led's twice at startup
         await Promise.all([
