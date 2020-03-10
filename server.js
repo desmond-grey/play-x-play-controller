@@ -46,7 +46,6 @@ const systemLedRed = new Gpio(9, 'out');              // pin 21
         sideOneButton.watch(buttonOneWatcher);
         sideTwoButton.watch(buttonTwoWatcher);
     } catch (e) {
-        // todo: some errors are not handled here but are special kinds of body responses.  handle those
         console.error(e);
     }
 })();
@@ -71,7 +70,7 @@ function buttonOneWatcher(err, value) {
         pxpClient
             .postPointScored(TABLE_ID, 1)
             .then((response) => {
-                console.dir(response.body);
+                console.log(JSON.stringify(response.body, null, 2));
                 ledUtil.blinkLed(sideOneLedGreen, 2);
             })
             .catch((err) => {
@@ -98,10 +97,11 @@ function buttonTwoWatcher(err, value) {
         pxpClient
             .postPointScored(TABLE_ID, 2)
             .then((response) => {
-                console.dir(response.body);
+                console.log(JSON.stringify(response.body, null, 2));
                 ledUtil.blinkLed(sideTwoLedGreen, 2);
             })
             .catch((err) => {
+                // todo: some errors are not handled here but are special kinds of body responses.  handle those
                 console.error(`Error: ${err}`);
             });
     }
