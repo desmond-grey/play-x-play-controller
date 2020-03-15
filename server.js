@@ -17,19 +17,8 @@ const systemLedRed = new Gpio(9, 'out');              // pin 21
 // https://stackoverflow.com/questions/46515764/how-can-i-use-async-await-at-the-top-level
 (async () => {
     try {
-        // turn all LED's off
-        ledUtil.turnLedOff(sideOneLedGreen);
-        ledUtil.turnLedOff(sideTwoLedGreen);
-        ledUtil.turnLedOff(systemLedGreen);
-        ledUtil.turnLedOff(systemLedRed);
-
-        // flash all the led's twice at startup
-        await Promise.all([
-            ledUtil.blinkLed(sideOneLedGreen, 2),
-            ledUtil.blinkLed(sideTwoLedGreen, 2),
-            ledUtil.blinkLed(systemLedGreen, 2),
-            ledUtil.blinkLed(systemLedRed, 2)
-        ]);
+        ledUtil.turnAllLedsOff();
+        await ledUtil.blinkAllLedsTwice();
 
         // check health and set system status to green if OK, red if not
         const serverHealth = await pxpClient.getHealth();
