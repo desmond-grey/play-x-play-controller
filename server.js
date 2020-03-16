@@ -6,29 +6,20 @@ const
 const TABLE_ID = 'prototype_controller';
 
 const sideOneButton = new Gpio(26, 'in', 'both');     // pin 37
-const sideOneLedGreen = new Gpio(19, 'out');          // pin 35
 const sideTwoButton = new Gpio(27, 'in', 'both');     // pin 13
-const sideTwoLedGreen = new Gpio(22, 'out');          // pin 15
-const systemLedGreen = new Gpio(11, 'out');           // pin 23
-const systemLedRed = new Gpio(9, 'out');              // pin 21
+
+const POLLING_INTERVAL_MILLIS = 1000;
 
 
 // we wrap everything in this top-level IIFE async function so we can await on things during startup
 // https://stackoverflow.com/questions/46515764/how-can-i-use-async-await-at-the-top-level
 (async () => {
     try {
-        ledUtil.turnAllLedsOff();
-        await ledUtil.blinkAllLedsTwice();
+        ledUtil.turnAllOff();
+        await ledUtil.blinkAll(2);
 
-        // check health and set system status to green if OK, red if not
-        const serverHealth = await pxpClient.getHealth();
-        if (serverHealth.body.status === 'healthy') {
-            ledUtil.turnLedOn(systemLedGreen);
-            ledUtil.turnLedOff(systemLedRed);
-        } else {
-            ledUtil.turnLedOff(systemLedGreen);
-            ledUtil.turnLedOn(systemLedRed);
-        }
+        // poll for health
+        setInterval(checkServerHealth, POLLING_INTERVAL_MILLIS);
 
         // register event handlers
         process.on('SIGINT', cleanupResources());       // runs on exit via ctrl-c
@@ -42,6 +33,25 @@ const systemLedRed = new Gpio(9, 'out');              // pin 21
 
 // ----- private -----
 
+function checkServerHealth() {
+    pxpClient
+        .getHealth()
+        .then(response => {
+            if(response.body.status === 'healthy') {
+                ledUtil.turnOff('SYSTEM_RED');
+                ledUtil.blink('SYSTEM_GREEN');
+            } else {
+                ledUtil.turnOff('SYSTEM_GREEN');
+                ledUtil.blink('SYSTEM_RED');
+            }
+        })
+        .catch(err => {
+            console.log(`Error: ${err}`);
+            ledUtil.turnOff('SYSTEM_GREEN');
+            ledUtil.blink('SYSTEM_RED');
+        });
+}
+
 function buttonOneWatcher(err, value) {
     if (err) { //if an error
         console.error('There was an error', err); //output error message to console
@@ -50,7 +60,7 @@ function buttonOneWatcher(err, value) {
 
     // down-press (rising)
     if (value === 1) {
-        ledUtil.turnLedOn(sideOneLedGreen);
+        ledUtil.turnOn('SIDE_ONE_GREEN');
     }
 
     // up-press (falling)
@@ -60,7 +70,7 @@ function buttonOneWatcher(err, value) {
             .postPointScored(TABLE_ID, 1)
             .then((response) => {
                 console.log(JSON.stringify(response.body, null, 2));
-                ledUtil.blinkLed(sideOneLedGreen, 2);
+                ledUtil.blink('SIDE_ONE_GREEN', 2);
             })
             .catch((err) => {
                 // todo: some errors are not handled here but are special kinds of body responses.  handle those
@@ -77,7 +87,7 @@ function buttonTwoWatcher(err, value) {
 
     // down-press (rising)
     if (value === 1) {
-        ledUtil.turnLedOn(sideTwoLedGreen);
+        ledUtil.turnOn('SIDE_TWO_GREEN');
     }
 
     // up-press (falling)
@@ -87,7 +97,7 @@ function buttonTwoWatcher(err, value) {
             .postPointScored(TABLE_ID, 2)
             .then((response) => {
                 console.log(JSON.stringify(response.body, null, 2));
-                ledUtil.blinkLed(sideTwoLedGreen, 2);
+                ledUtil.blink('SIDE_TWO_GREEN', 2);
             })
             .catch((err) => {
                 // todo: some errors are not handled here but are special kinds of body responses.  handle those
@@ -98,17 +108,8 @@ function buttonTwoWatcher(err, value) {
 
 function cleanupResources() {
     return () => {
-        sideOneLedGreen.writeSync(0);
-        sideOneLedGreen.unexport();
+        ledUtil.cleanupResources();
         sideOneButton.unexport();
-
-        systemLedGreen.writeSync(0);
-        systemLedGreen.unexport();
-        systemLedRed.writeSync(0);
-        systemLedRed.unexport();
-
-        sideTwoLedGreen.writeSync(0);
-        sideTwoLedGreen.unexport();
         sideTwoButton.unexport();
     };
 }
