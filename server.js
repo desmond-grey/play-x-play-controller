@@ -10,6 +10,8 @@ const sideTwoButton = new Gpio(27, 'in', 'both');     // pin 13
 
 const POLLING_INTERVAL_MILLIS = 1000;
 
+// register event handlers
+process.on('SIGINT', cleanupResources());       // runs on exit via ctrl-c
 
 // we wrap everything in this top-level IIFE async function so we can await on things during startup
 // https://stackoverflow.com/questions/46515764/how-can-i-use-async-await-at-the-top-level
@@ -17,14 +19,7 @@ const POLLING_INTERVAL_MILLIS = 1000;
     try {
         ledUtil.turnAllOff();
         await ledUtil.blinkAll(2);
-
-        // poll for health
-        setInterval(checkServerHealth, POLLING_INTERVAL_MILLIS);
-
-        // register event handlers
-        process.on('SIGINT', cleanupResources());       // runs on exit via ctrl-c
-        sideOneButton.watch(buttonOneWatcher);
-        sideTwoButton.watch(buttonTwoWatcher);
+        await canEstablishConnection();
     } catch (e) {
         console.error(e);
     }
@@ -33,23 +28,71 @@ const POLLING_INTERVAL_MILLIS = 1000;
 
 // ----- private -----
 
-function checkServerHealth() {
-    pxpClient
-        .getHealth()
-        .then(response => {
-            if(response.body.status === 'healthy') {
-                ledUtil.turnOff('SYSTEM_RED');
-                ledUtil.blink('SYSTEM_GREEN');
-            } else {
-                ledUtil.turnOff('SYSTEM_GREEN');
-                ledUtil.blink('SYSTEM_RED');
-            }
-        })
-        .catch(err => {
-            console.log(`Error: ${err}`);
-            ledUtil.turnOff('SYSTEM_GREEN');
-            ledUtil.blink('SYSTEM_RED');
-        });
+async function canEstablishConnection() {
+    console.log("Checking health of connection");
+    const isConnectionHealthy = await isConnectionHealthyFunction();
+    if(isConnectionHealthy) {
+        await ledUtil.blink('SYSTEM_GREEN', 1);
+        setTimeout(hasActiveGame.bind(null, TABLE_ID), 1000);
+    } else {
+        await ledUtil.blink('SYSTEM_RED', 1);
+        setTimeout(isConnectionHealthyFunction, 1000);
+    }
+}
+
+// turns the getGameStatusForTableId call into a true, false or error.
+async function hasActiveGame(tableId) {
+    console.log('');
+    console.log(`Checking for active game on table: ${TABLE_ID}`);
+    return new Promise((resolve, reject) => {
+        pxpClient
+            .getGameStatusForTableId(tableId)
+            .then(async (response) => {
+                const gameId = response.body.gameId;
+                if(gameId && response.statusCode === 200) {
+                    console.log(`- active game found.  gameId: ${gameId}`);
+                    ledUtil.turnAllOff();
+                    ledUtil.turnOn('SYSTEM_GREEN');
+                    ledUtil.turnOn('SIDE_ONE_GREEN');
+                    ledUtil.turnOn('SIDE_TWO_GREEN');
+
+                    sideOneButton.watch(buttonOneWatcher);
+                    sideTwoButton.watch(buttonTwoWatcher);
+
+                    resolve(true);
+                } else if(! gameId && response.statusCode === 404) {
+                    console.log('- no active game found');
+                    await Promise.all([
+                        ledUtil.blink('SYSTEM_GREEN', 2),
+                        ledUtil.blink('SIDE_ONE_GREEN', 2),
+                        ledUtil.blink('SIDE_TWO_GREEN', 2)
+                    ]);
+
+                    setTimeout(hasActiveGame.bind(null, TABLE_ID), 1000);
+                    resolve(false)
+                }
+            })
+            .catch(err => {
+                console.log(`Error getting gameStatus for tableId: ${tableId}.  Error: ${err}`);
+                setTimeout(isConnectionHealthyFunction, 1000);
+                reject(err);
+            });
+    })
+}
+
+// turns the getHealth call into a true, false or error.
+async function isConnectionHealthyFunction() {
+    return new Promise((resolve, reject) => {
+        pxpClient
+            .getHealth()
+            .then(response => {
+                resolve(response.body.status === 'healthy');
+            })
+            .catch(err => {
+                console.log(`Error: ${err}`);
+                reject(err);
+            });
+    })
 }
 
 function buttonOneWatcher(err, value) {
