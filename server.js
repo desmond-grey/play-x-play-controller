@@ -108,7 +108,7 @@ function buttonOneWatcher(err, value) {
 
     // up-press (falling)
     else if (value === 0) {
-        ledUtil.turnLedOff(sideOneLedGreen);
+        ledUtil.turnOff('SIDE_ONE_GREEN');
         pxpClient
             .postPointScored(TABLE_ID, 1)
             .then((response) => {
@@ -135,7 +135,7 @@ function buttonTwoWatcher(err, value) {
 
     // up-press (falling)
     else if (value === 0) {
-        ledUtil.turnLedOff(sideTwoLedGreen);
+        ledUtil.turnOff('SIDE_TWO_GREEN');
         pxpClient
             .postPointScored(TABLE_ID, 2)
             .then((response) => {
