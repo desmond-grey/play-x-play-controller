@@ -1,6 +1,7 @@
 const
     Gpio = require('onoff').Gpio,
     ledUtil = require('./lib/ledUtil'),
+    ledNames = ledUtil.ledNames,
     pxpClient = require('./lib/pxpClient');
 
 const TABLE_ID = 'prototype_controller';
@@ -8,7 +9,7 @@ const TABLE_ID = 'prototype_controller';
 const sideOneButton = new Gpio(26, 'in', 'both');     // pin 37
 const sideTwoButton = new Gpio(27, 'in', 'both');     // pin 13
 
-const POLLING_INTERVAL_MILLIS = 1000;
+const POLLING_INTERVAL_MILLIS = 1000;       // todo: centralize intervals.  put into config
 
 // register event handlers
 process.on('SIGINT', cleanupResources());       // runs on exit via ctrl-c
@@ -32,10 +33,10 @@ async function canEstablishConnection() {
     console.log("Checking health of connection");
     const isConnectionHealthy = await isConnectionHealthyFunction();
     if(isConnectionHealthy) {
-        await ledUtil.blink('SYSTEM_GREEN', 1);
+        await ledUtil.blink(    ledNames.SYSTEM_GREEN, 1);
         setTimeout(hasActiveGame.bind(null, TABLE_ID), 1000);
     } else {
-        await ledUtil.blink('SYSTEM_RED', 1);
+        await ledUtil.blink(ledNames.SYSTEM_RED, 1);
         setTimeout(isConnectionHealthyFunction, 1000);
     }
 }
@@ -52,9 +53,9 @@ async function hasActiveGame(tableId) {
                 if(gameId && response.statusCode === 200) {
                     console.log(`- active game found.  gameId: ${gameId}`);
                     ledUtil.turnAllOff();
-                    ledUtil.turnOn('SYSTEM_GREEN');
-                    ledUtil.turnOn('SIDE_ONE_GREEN');
-                    ledUtil.turnOn('SIDE_TWO_GREEN');
+                    ledUtil.turnOn(ledNames.SYSTEM_GREEN);
+                    ledUtil.turnOn(ledNames.SIDE_ONE_GREEN);
+                    ledUtil.turnOn(ledNames.SIDE_TWO_GREEN);
 
                     sideOneButton.watch(buttonOneWatcher);
                     sideTwoButton.watch(buttonTwoWatcher);
@@ -63,9 +64,9 @@ async function hasActiveGame(tableId) {
                 } else if(! gameId && response.statusCode === 404) {
                     console.log('- no active game found');
                     await Promise.all([
-                        ledUtil.blink('SYSTEM_GREEN', 2),
-                        ledUtil.blink('SIDE_ONE_GREEN', 2),
-                        ledUtil.blink('SIDE_TWO_GREEN', 2)
+                        ledUtil.blink(ledNames.SYSTEM_GREEN, 2),
+                        ledUtil.blink(ledNames.SIDE_ONE_GREEN, 2),
+                        ledUtil.blink(ledNames.SIDE_TWO_GREEN, 2)
                     ]);
 
                     setTimeout(hasActiveGame.bind(null, TABLE_ID), 1000);
@@ -103,17 +104,17 @@ function buttonOneWatcher(err, value) {
 
     // down-press (rising)
     if (value === 1) {
-        ledUtil.turnOn('SIDE_ONE_GREEN');
+        ledUtil.turnOn(ledNames.SIDE_ONE_GREEN);
     }
 
     // up-press (falling)
     else if (value === 0) {
-        ledUtil.turnOff('SIDE_ONE_GREEN');
+        ledUtil.turnOff(ledNames.SIDE_ONE_GREEN);
         pxpClient
             .postPointScored(TABLE_ID, 1)
             .then((response) => {
                 console.log(JSON.stringify(response.body, null, 2));
-                ledUtil.blink('SIDE_ONE_GREEN', 2);
+                ledUtil.blink(ledNames.SIDE_ONE_GREEN, 2);
             })
             .catch((err) => {
                 // todo: some errors are not handled here but are special kinds of body responses.  handle those
@@ -130,17 +131,17 @@ function buttonTwoWatcher(err, value) {
 
     // down-press (rising)
     if (value === 1) {
-        ledUtil.turnOn('SIDE_TWO_GREEN');
+        ledUtil.turnOn(ledNames.SIDE_TWO_GREEN);
     }
 
     // up-press (falling)
     else if (value === 0) {
-        ledUtil.turnOff('SIDE_TWO_GREEN');
+        ledUtil.turnOff(ledNames.SIDE_TWO_GREEN);
         pxpClient
             .postPointScored(TABLE_ID, 2)
             .then((response) => {
                 console.log(JSON.stringify(response.body, null, 2));
-                ledUtil.blink('SIDE_TWO_GREEN', 2);
+                ledUtil.blink(ledNames.SIDE_TWO_GREEN, 2);
             })
             .catch((err) => {
                 // todo: some errors are not handled here but are special kinds of body responses.  handle those
