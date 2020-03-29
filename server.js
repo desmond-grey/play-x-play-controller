@@ -34,10 +34,10 @@ async function canEstablishConnection() {
     const isConnectionHealthy = await isConnectionHealthyFunction();
     if(isConnectionHealthy) {
         await ledUtil.blink(    ledNames.SYSTEM_GREEN, 1);
-        setTimeout(hasActiveGame.bind(null, TABLE_ID), 1000);
+        setTimeout(hasActiveGame.bind(null, TABLE_ID), POLLING_INTERVAL_MILLIS);
     } else {
         await ledUtil.blink(ledNames.SYSTEM_RED, 1);
-        setTimeout(isConnectionHealthyFunction, 1000);
+        setTimeout(isConnectionHealthyFunction, POLLING_INTERVAL_MILLIS);
     }
 }
 
@@ -69,13 +69,13 @@ async function hasActiveGame(tableId) {
                         ledUtil.blink(ledNames.SIDE_TWO_GREEN, 2)
                     ]);
 
-                    setTimeout(hasActiveGame.bind(null, TABLE_ID), 1000);
+                    setTimeout(hasActiveGame.bind(null, TABLE_ID), POLLING_INTERVAL_MILLIS);
                     resolve(false)
                 }
             })
             .catch(err => {
                 console.log(`Error getting gameStatus for tableId: ${tableId}.  Error: ${err}`);
-                setTimeout(isConnectionHealthyFunction, 1000);
+                setTimeout(isConnectionHealthyFunction, POLLING_INTERVAL_MILLIS);
                 reject(err);
             });
     })
