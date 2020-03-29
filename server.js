@@ -1,6 +1,6 @@
 const
     Gpio = require('onoff').Gpio,
-    config = require('./config'),
+    config = require('config'),
     ledUtil = require('./lib/ledUtil'),
     ledNames = ledUtil.ledNames,
     pxpClient = require('./lib/pxpClient');
@@ -34,10 +34,10 @@ async function canEstablishConnection() {
     const isConnectionHealthy = await isConnectionHealthyFunction();
     if(isConnectionHealthy) {
         await ledUtil.blink(    ledNames.SYSTEM_GREEN, 1);
-        setTimeout(hasActiveGame.bind(null, TABLE_ID), config.BLINK_INTERVAL_MILLIS);
+        setTimeout(hasActiveGame.bind(null, TABLE_ID), config.get('BLINK_INTERVAL_MILLIS'));
     } else {
         await ledUtil.blink(ledNames.SYSTEM_RED, 1);
-        setTimeout(isConnectionHealthyFunction, config.BLINK_INTERVAL_MILLIS);
+        setTimeout(isConnectionHealthyFunction, config.get('BLINK_INTERVAL_MILLIS'));
     }
 }
 
@@ -69,13 +69,13 @@ async function hasActiveGame(tableId) {
                         ledUtil.blink(ledNames.SIDE_TWO_GREEN, 2)
                     ]);
 
-                    setTimeout(hasActiveGame.bind(null, TABLE_ID), config.BLINK_INTERVAL_MILLIS);
+                    setTimeout(hasActiveGame.bind(null, TABLE_ID), config.get('BLINK_INTERVAL_MILLIS'));
                     resolve(false)
                 }
             })
             .catch(err => {
                 console.log(`Error getting gameStatus for tableId: ${tableId}.  Error: ${err}`);
-                setTimeout(isConnectionHealthyFunction, config.BLINK_INTERVAL_MILLIS);
+                setTimeout(isConnectionHealthyFunction, config.get('BLINK_INTERVAL_MILLIS'));
                 reject(err);
             });
     })
