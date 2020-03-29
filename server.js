@@ -1,5 +1,6 @@
 const
     Gpio = require('onoff').Gpio,
+    config = require('./config'),
     ledUtil = require('./lib/ledUtil'),
     ledNames = ledUtil.ledNames,
     pxpClient = require('./lib/pxpClient');
@@ -9,7 +10,6 @@ const TABLE_ID = 'prototype_controller';
 const sideOneButton = new Gpio(26, 'in', 'both');     // pin 37
 const sideTwoButton = new Gpio(27, 'in', 'both');     // pin 13
 
-const POLLING_INTERVAL_MILLIS = 1000;       // todo: centralize intervals.  put into config
 
 // register event handlers
 process.on('SIGINT', cleanupResources());       // runs on exit via ctrl-c
@@ -34,10 +34,10 @@ async function canEstablishConnection() {
     const isConnectionHealthy = await isConnectionHealthyFunction();
     if(isConnectionHealthy) {
         await ledUtil.blink(    ledNames.SYSTEM_GREEN, 1);
-        setTimeout(hasActiveGame.bind(null, TABLE_ID), POLLING_INTERVAL_MILLIS);
+        setTimeout(hasActiveGame.bind(null, TABLE_ID), config.BLINK_INTERVAL_MILLIS);
     } else {
         await ledUtil.blink(ledNames.SYSTEM_RED, 1);
-        setTimeout(isConnectionHealthyFunction, POLLING_INTERVAL_MILLIS);
+        setTimeout(isConnectionHealthyFunction, config.BLINK_INTERVAL_MILLIS);
     }
 }
 
@@ -69,13 +69,13 @@ async function hasActiveGame(tableId) {
                         ledUtil.blink(ledNames.SIDE_TWO_GREEN, 2)
                     ]);
 
-                    setTimeout(hasActiveGame.bind(null, TABLE_ID), POLLING_INTERVAL_MILLIS);
+                    setTimeout(hasActiveGame.bind(null, TABLE_ID), config.BLINK_INTERVAL_MILLIS);
                     resolve(false)
                 }
             })
             .catch(err => {
                 console.log(`Error getting gameStatus for tableId: ${tableId}.  Error: ${err}`);
-                setTimeout(isConnectionHealthyFunction, POLLING_INTERVAL_MILLIS);
+                setTimeout(isConnectionHealthyFunction, config.BLINK_INTERVAL_MILLIS);
                 reject(err);
             });
     })
