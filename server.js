@@ -114,7 +114,7 @@ function buttonOneWatcher(err, value) {
             .postPointScored(TABLE_ID, 1)
             .then((response) => {
                 console.log(JSON.stringify(response.body, null, 2));
-                ledUtil.blink(ledNames.SIDE_ONE_GREEN, 2);
+                ledUtil.blinkFast(ledNames.SIDE_ONE_GREEN, 2);
             })
             .catch((err) => {
                 // todo: some errors are not handled here but are special kinds of body responses.  handle those
@@ -141,7 +141,7 @@ function buttonTwoWatcher(err, value) {
             .postPointScored(TABLE_ID, 2)
             .then((response) => {
                 console.log(JSON.stringify(response.body, null, 2));
-                ledUtil.blink(ledNames.SIDE_TWO_GREEN, 2);
+                ledUtil.blinkFast(ledNames.SIDE_TWO_GREEN, 2);
             })
             .catch((err) => {
                 // todo: some errors are not handled here but are special kinds of body responses.  handle those
