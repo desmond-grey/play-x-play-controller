@@ -104,12 +104,12 @@ function buttonOneWatcher(err, value) {
 
     // down-press (rising)
     if (value === 1) {
-        ledUtil.turnOn(ledNames.SIDE_ONE_GREEN);
+        ledUtil.turnOff(ledNames.SIDE_ONE_GREEN);
     }
 
     // up-press (falling)
     else if (value === 0) {
-        ledUtil.turnOff(ledNames.SIDE_ONE_GREEN);
+        ledUtil.turnOn(ledNames.SIDE_ONE_GREEN);
         pxpClient
             .postPointScored(TABLE_ID, 1)
             .then((response) => {
@@ -131,12 +131,12 @@ function buttonTwoWatcher(err, value) {
 
     // down-press (rising)
     if (value === 1) {
-        ledUtil.turnOn(ledNames.SIDE_TWO_GREEN);
+        ledUtil.turnOff(ledNames.SIDE_TWO_GREEN);
     }
 
     // up-press (falling)
     else if (value === 0) {
-        ledUtil.turnOff(ledNames.SIDE_TWO_GREEN);
+        ledUtil.turnOn(ledNames.SIDE_TWO_GREEN);
         pxpClient
             .postPointScored(TABLE_ID, 2)
             .then((response) => {
