@@ -52,6 +52,7 @@ async function hasActiveGame(tableId) {
                 const gameId = response.body.gameId;
                 if(gameId && response.statusCode === 200) {
                     console.log(`- active game found.  gameId: ${gameId}`);
+                    console.log('');
                     ledUtil.turnAllOff();
                     ledUtil.turnOn(ledNames.SYSTEM_GREEN);
                     ledUtil.turnOn(ledNames.SIDE_ONE_GREEN);
@@ -63,6 +64,7 @@ async function hasActiveGame(tableId) {
                     resolve(true);
                 } else if(! gameId && response.statusCode === 404) {
                     console.log('- no active game found');
+                    console.log('');
                     await Promise.all([
                         ledUtil.blink(ledNames.SYSTEM_GREEN, 2),
                         ledUtil.blink(ledNames.SIDE_ONE_GREEN, 2),
@@ -113,12 +115,26 @@ function buttonOneWatcher(err, value) {
         pxpClient
             .postPointScored(TABLE_ID, 1)
             .then((response) => {
-                console.log(JSON.stringify(response.body, null, 2));
-                ledUtil.blinkFast(ledNames.SIDE_ONE_GREEN, 2);
+                if(response.status === 404) {
+                    console.log('No Active Game');
+                    setTimeout(activeGameHasEnded, 0);      // todo: is the setTimeout necessary?
+                } else if(response.body.gameStatus ==='COMPLETE') {
+                    console.log('Point scored successfully.  Game Complete.  Final game status:');
+                    console.log(JSON.stringify(response.body, null, 2));
+                    console.log('');
+
+                    setTimeout(activeGameHasEnded, 0);      // todo: is the setTimeout necessary?
+                } else {
+                    console.log('Point scored successfully.  Game status:');
+                    console.log(JSON.stringify(response.body, null, 2));
+                    console.log('');
+
+                    ledUtil.blinkFast(ledNames.SIDE_ONE_GREEN, 2);
+                }
             })
             .catch((err) => {
-                // todo: some errors are not handled here but are special kinds of body responses.  handle those
                 console.error(`Error: ${err}`);
+                setTimeout(activeGameHasEnded, 0);      // todo: is the setTimeout necessary?
             });
     }
 }
@@ -140,14 +156,39 @@ function buttonTwoWatcher(err, value) {
         pxpClient
             .postPointScored(TABLE_ID, 2)
             .then((response) => {
-                console.log(JSON.stringify(response.body, null, 2));
-                ledUtil.blinkFast(ledNames.SIDE_TWO_GREEN, 2);
+                if(response.status === 404) {
+                    console.log('No Active Game');
+                    setTimeout(activeGameHasEnded, 0);      // todo: is the setTimeout necessary?
+                } else if(response.body.gameStatus ==='COMPLETE') {
+                    console.log('Point scored successfully.  Game Complete.  Final game status:');
+                    console.log(JSON.stringify(response.body, null, 2));
+                    console.log('');
+
+                    setTimeout(activeGameHasEnded, 0);      // todo: is the setTimeout necessary?
+                } else {
+                    console.log('Point scored successfully.  Game status:');
+                    console.log(JSON.stringify(response.body, null, 2));
+                    console.log('');
+
+                    ledUtil.blinkFast(ledNames.SIDE_TWO_GREEN, 2);
+                }
             })
             .catch((err) => {
-                // todo: some errors are not handled here but are special kinds of body responses.  handle those
                 console.error(`Error: ${err}`);
+                setTimeout(activeGameHasEnded, 0);      // todo: is the setTimeout necessary?
             });
     }
+}
+
+async function activeGameHasEnded() {
+    sideOneButton.unexport();
+    sideTwoButton.unexport();
+
+    ledUtil.turnOff(ledNames.SIDE_ONE_GREEN);
+    ledUtil.turnOff(ledNames.SIDE_TWO_GREEN);
+    ledUtil.turnOff(ledNames.SYSTEM_GREEN);
+
+    setTimeout(hasActiveGame, 0);
 }
 
 function cleanupResources() {
