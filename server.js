@@ -37,7 +37,7 @@ async function canEstablishConnection() {
         setTimeout(hasActiveGame.bind(null, TABLE_ID), config.get('BLINK_INTERVAL_MILLIS'));
     } else {
         await ledUtil.blink(ledNames.SYSTEM_RED, 1);
-        setTimeout(isConnectionHealthyFunction, config.get('BLINK_INTERVAL_MILLIS'));
+        setTimeout(canEstablishConnection, config.get('BLINK_INTERVAL_MILLIS'));
     }
 }
 
@@ -85,7 +85,7 @@ async function hasActiveGame(tableId) {
 
 // turns the getHealth call into a true, false or error.
 async function isConnectionHealthyFunction() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         pxpClient
             .getHealth()
             .then(response => {
@@ -93,7 +93,7 @@ async function isConnectionHealthyFunction() {
             })
             .catch(err => {
                 console.log(`Error: ${err}`);
-                reject(err);
+                resolve(false);
             });
     })
 }
