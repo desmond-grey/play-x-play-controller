@@ -7,8 +7,8 @@ const
 
 const TABLE_ID = 'prototype_controller';
 
-const sideOneButton = new Gpio(26, 'in', 'both');     // pin 37
-const sideTwoButton = new Gpio(27, 'in', 'both');     // pin 13
+const sideOneButton = new Gpio(26, 'in', 'both', {debounceTimeout: 10});     // pin 37
+const sideTwoButton = new Gpio(27, 'in', 'both', {debounceTimeout: 10});     // pin 13
 
 
 // register event handlers
@@ -145,8 +145,8 @@ function buttonWatcher(err, value) {
 }
 
 async function activeGameHasEnded() {
-    sideOneButton.unexport();
-    sideTwoButton.unexport();
+    sideOneButton.unwatch();
+    sideTwoButton.unwatch();
 
     ledUtil.turnOff(ledNames.SIDE_ONE_GREEN);
     ledUtil.turnOff(ledNames.SIDE_TWO_GREEN);
