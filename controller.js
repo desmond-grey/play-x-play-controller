@@ -34,10 +34,10 @@ async function canEstablishConnection() {
     const isConnectionHealthy = await isConnectionHealthyFunction();
     if(isConnectionHealthy) {
         await ledUtil.blink(    ledNames.SYSTEM_GREEN, 1);
-        setTimeout(hasActiveGame.bind(null, TABLE_ID), config.get('BLINK_INTERVAL_MILLIS'));
+        setTimeout(hasActiveGame.bind(null, TABLE_ID), config.get('POLLING_INTERVAL_MILLIS'));
     } else {
         await ledUtil.blink(ledNames.SYSTEM_RED, 1);
-        setTimeout(canEstablishConnection, config.get('BLINK_INTERVAL_MILLIS'));
+        setTimeout(canEstablishConnection, config.get('POLLING_INTERVAL_MILLIS'));
     }
 }
 
@@ -58,8 +58,8 @@ async function hasActiveGame(tableId) {
                     ledUtil.turnOn(ledNames.SIDE_ONE_GREEN);
                     ledUtil.turnOn(ledNames.SIDE_TWO_GREEN);
 
-                    sideOneButton.watch(buttonOneWatcher);
-                    sideTwoButton.watch(buttonTwoWatcher);
+                    sideOneButton.watch(buttonWatcher.bind({ledName: ledNames.SIDE_ONE_GREEN, tablePosition: 1}));
+                    sideTwoButton.watch(buttonWatcher.bind({ledName: ledNames.SIDE_TWO_GREEN, tablePosition: 2}));
 
                     resolve(true);
                 } else if(! gameId && response.statusCode === 404) {
@@ -71,13 +71,13 @@ async function hasActiveGame(tableId) {
                         ledUtil.blink(ledNames.SIDE_TWO_GREEN, 2)
                     ]);
 
-                    setTimeout(hasActiveGame.bind(null, TABLE_ID), config.get('BLINK_INTERVAL_MILLIS'));
+                    setTimeout(hasActiveGame.bind(null, TABLE_ID), config.get('POLLING_INTERVAL_MILLIS'));
                     resolve(false)
                 }
             })
             .catch(err => {
                 console.log(`Error getting gameStatus for tableId: ${tableId}.  Error: ${err}`);
-                setTimeout(isConnectionHealthyFunction, config.get('BLINK_INTERVAL_MILLIS'));
+                setTimeout(isConnectionHealthyFunction, config.get('POLLING_INTERVAL_MILLIS'));
                 reject(err);
             });
     })
@@ -98,7 +98,7 @@ async function isConnectionHealthyFunction() {
     })
 }
 
-function buttonOneWatcher(err, value) {
+function buttonWatcher(err, value) {
     if (err) { //if an error
         console.error('There was an error', err); //output error message to console
         return;
@@ -106,14 +106,18 @@ function buttonOneWatcher(err, value) {
 
     // down-press (rising)
     if (value === 1) {
-        ledUtil.turnOff(ledNames.SIDE_ONE_GREEN);
+        // noinspection JSUnresolvedVariable
+        ledUtil.turnOff(this.ledName);
     }
 
     // up-press (falling)
     else if (value === 0) {
-        ledUtil.turnOn(ledNames.SIDE_ONE_GREEN);
+        // noinspection JSUnresolvedVariable
+        ledUtil.turnOn(this.ledName);
+
+        // noinspection JSUnresolvedVariable
         pxpClient
-            .postPointScored(TABLE_ID, 1)
+            .postPointScored(TABLE_ID, this.tablePosition)
             .then((response) => {
                 if(response.status === 404) {
                     console.log('No Active Game');
@@ -129,48 +133,8 @@ function buttonOneWatcher(err, value) {
                     console.log(JSON.stringify(response.body, null, 2));
                     console.log('');
 
-                    ledUtil.blinkFast(ledNames.SIDE_ONE_GREEN, 2);
-                }
-            })
-            .catch((err) => {
-                console.error(`Error: ${err}`);
-                setTimeout(activeGameHasEnded, 0);      // todo: is the setTimeout necessary?
-            });
-    }
-}
-
-function buttonTwoWatcher(err, value) {
-    if (err) { //if an error
-        console.error('There was an error', err); //output error message to console
-        return;
-    }
-
-    // down-press (rising)
-    if (value === 1) {
-        ledUtil.turnOff(ledNames.SIDE_TWO_GREEN);
-    }
-
-    // up-press (falling)
-    else if (value === 0) {
-        ledUtil.turnOn(ledNames.SIDE_TWO_GREEN);
-        pxpClient
-            .postPointScored(TABLE_ID, 2)
-            .then((response) => {
-                if(response.status === 404) {
-                    console.log('No Active Game');
-                    setTimeout(activeGameHasEnded, 0);      // todo: is the setTimeout necessary?
-                } else if(response.body.gameStatus ==='COMPLETE') {
-                    console.log('Point scored successfully.  Game Complete.  Final game status:');
-                    console.log(JSON.stringify(response.body, null, 2));
-                    console.log('');
-
-                    setTimeout(activeGameHasEnded, 0);      // todo: is the setTimeout necessary?
-                } else {
-                    console.log('Point scored successfully.  Game status:');
-                    console.log(JSON.stringify(response.body, null, 2));
-                    console.log('');
-
-                    ledUtil.blinkFast(ledNames.SIDE_TWO_GREEN, 2);
+                    // noinspection JSUnresolvedVariable
+                    ledUtil.blinkFast(this.ledName, 2);
                 }
             })
             .catch((err) => {
